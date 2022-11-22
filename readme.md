@@ -1,7 +1,6 @@
 XMLMindmapToLVS
 ===============
-Description:
-------------
+
 XMLMindmapToLVS is an Unreal plugin which reads XML data from mindomo.com and creates relevant UE5 Level Variant Sets.
 
 Input:
