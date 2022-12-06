@@ -128,11 +128,17 @@ def create_level_variant_sets(root_node):
 	"""
 	logging.info("Creating Level Variant Sets")
 
+	if root_node.name:
+		lvs_directory = default_lvs_directory + '/' + root_node.name.replace(' ', '_') + '_LVS'
+	else:
+		lvs_directory = default_lvs_directory
+
 	for product_node in root_node.children:
-		lvs_path = default_lvs_directory + '/' + product_node.name.replace(' ', '_')
-		lvs = unreal.EditorAssetLibrary.load_asset(lvs_path)
-		if lvs is None:
-			lvs = unreal.VariantManagerLibrary.create_level_variant_sets_asset(product_node.name, default_lvs_directory)
+		lvs_path = lvs_directory + '/' + product_node.name.replace(' ', '_')
+		if unreal.EditorAssetLibrary.does_asset_exist(lvs_path):
+			lvs = unreal.EditorAssetLibrary.load_asset(lvs_path)
+		else:
+			lvs = unreal.VariantManagerLibrary.create_level_variant_sets_asset(product_node.name, lvs_directory)
 		for variant_set_node in product_node.children:
 			vs = lvs.get_variant_set_by_name(variant_set_node.name)
 			if vs is None:
