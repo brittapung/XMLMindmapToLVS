@@ -12,6 +12,7 @@ fourth level nodes contain the different Variants of a given feature.
 Output:
 -------
 Level Variant Set objects for every product which contain the relevant variant sets and variants.
+If an object already exists it is not overwritten, only new objects are added.
 
 Installation:
 -------------
