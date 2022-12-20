@@ -140,16 +140,16 @@ def create_level_variant_sets(root_node):
 		else:
 			lvs = unreal.VariantManagerLibrary.create_level_variant_sets_asset(product_node.name, lvs_directory)
 		for variant_set_node in product_node.children:
-			vs = lvs.get_variant_set_by_name(variant_set_node.name)
+			vs = lvs.get_variant_set_by_name(variant_set_node.name.replace(' ', '_'))
 			if vs is None:
 				vs = unreal.VariantSet()
-				vs.set_display_text(variant_set_node.name)
+				vs.set_display_text(variant_set_node.name.replace(' ', '_'))
 				unreal.VariantManagerLibrary.add_variant_set(lvs, vs)
 			for variant_node in variant_set_node.children:
-				variant = vs.get_variant_by_name(variant_node.name)
+				variant = vs.get_variant_by_name(variant_node.name.replace(' ', '_'))
 				if variant is None:
 					variant = unreal.Variant()
-					variant.set_display_text(variant_node.name)
+					variant.set_display_text(variant_node.name.replace(' ', '_'))
 					unreal.VariantManagerLibrary.add_variant(vs, variant)
 
 
