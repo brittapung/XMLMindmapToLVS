@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 import os
 import re
@@ -30,7 +31,7 @@ class TreeNode:
 
 	def __str__(self):
 		return str(self.outline_number) + ' ' + str(self.outline_level) + ' ' + self.name + ' '\
-			   + str(len(self.children)) + ' children'
+			+ str(len(self.children)) + ' children'
 
 
 def process_xml(file_path):
@@ -82,7 +83,7 @@ def process_tasks(xml_data):
 	tasks_list = []
 	for task in tasks:
 		name = task.find('ns:Name', namespaces).text
-		outline_number = int(task.find('ns:OutlineNumber', namespaces).text)
+		outline_number = str(task.find('ns:OutlineNumber', namespaces).text)
 		outline_level = int(task.find('ns:OutlineLevel', namespaces).text)
 		tasks_list.append({'name': name, 'outline_number': outline_number, 'outline_level': outline_level})
 
@@ -103,13 +104,13 @@ def recursive_loop(rest_of_tasks_list):
 		return current_node
 
 	# Add children
-	current_outline_level = current_task['outline_level']
-	next_outline_level = rest_of_tasks_list[0]['outline_level']
-	while next_outline_level > current_outline_level:
+	current_outline_number = current_task['outline_number']
+	next_outline_number = rest_of_tasks_list[0]['outline_number']
+	while len(next_outline_number) > len(current_outline_number):
 		current_node.add_child(recursive_loop(rest_of_tasks_list))
 		if len(rest_of_tasks_list) == 0:
 			break
-		next_outline_level = rest_of_tasks_list[0]['outline_level']
+		next_outline_number = rest_of_tasks_list[0]['outline_number']
 
 	return current_node
 
@@ -139,18 +140,60 @@ def create_level_variant_sets(root_node):
 			lvs = unreal.EditorAssetLibrary.load_asset(lvs_path)
 		else:
 			lvs = unreal.VariantManagerLibrary.create_level_variant_sets_asset(product_node.name, lvs_directory)
-		for variant_set_node in product_node.children:
-			vs = lvs.get_variant_set_by_name(variant_set_node.name.replace(' ', '_'))
+
+		variant_set_dict = get_variants_dict(product_node)
+		for variant_set, variants in variant_set_dict.items():
+			split_vs = variant_set.split('.')
+			vs_name = '.'.join(split_vs[1:]).replace(' ', '_')
+
+			vs = lvs.get_variant_set_by_name(vs_name)
 			if vs is None:
 				vs = unreal.VariantSet()
-				vs.set_display_text(variant_set_node.name.replace(' ', '_'))
+				vs.set_display_text(vs_name)
 				unreal.VariantManagerLibrary.add_variant_set(lvs, vs)
-			for variant_node in variant_set_node.children:
-				variant = vs.get_variant_by_name(variant_node.name.replace(' ', '_'))
+			for variant_name in variants:
+				variant = vs.get_variant_by_name(variant_name.replace(' ', '_'))
 				if variant is None:
 					variant = unreal.Variant()
-					variant.set_display_text(variant_node.name.replace(' ', '_'))
+					variant.set_display_text(variant_name.replace(' ', '_'))
 					unreal.VariantManagerLibrary.add_variant(vs, variant)
+
+
+def get_variants_dict(product_node):
+	"""
+	Gets recursive list of variants for the given node and collates into a dictionary
+
+	:param product_node: The product node to get variants for
+	:return: A dictionary where the keys are variant sets and the values are lists of variants
+	"""
+	variants_list = get_variants_list(product_node, '')
+
+	variant_set_dict = defaultdict(list)
+	for variant_dict in variants_list:
+		for key, value in variant_dict.items():
+			variant_set_dict[key].append(value)
+
+	return variant_set_dict
+
+
+def get_variants_list(variant_set_node, prefix):
+	"""
+	Loops through product nodes recursively and returns all variants for a product
+
+	:param variant_set_node: Current product or property node
+	:param prefix: Current prefix to add to the variant set name
+	:return: A list of dictionaries where the keys are variant sets and the values are variants
+	"""
+	variants_list = []
+
+	for child in variant_set_node.children:
+		if not child.children:
+			variant_set = '.'.join([prefix, variant_set_node.name])
+			variants_list.append({variant_set: child.name})
+		else:
+			variants_list += get_variants_list(child, '.'.join([prefix, variant_set_node.name]).strip('.'))
+
+	return variants_list
 
 
 def quit_execution(error_message):
@@ -167,4 +210,4 @@ def namespace(element):
 
 if __name__ == '__main__':
 	logging.info(str(sys.argv))
-	process_xml(sys.argv[0])
+	process_xml('C:\\Users\\Admin\\Desktop\\[AVAR TEMPLATE] Company name - Copy.xml')

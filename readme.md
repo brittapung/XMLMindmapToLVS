@@ -19,6 +19,7 @@ Installation:
 1. Go to your Unreal project's folder and create a folder called 'Plugins' if you don't have one yet.
 2. Place the 'XMLMindmapToLVS' folder in the Plugins folder.
 3. Restart Unreal Engine if you had it open.
+4. Make sure you have "Show Plugin Content" enabled under Content Browser settings.
 
 Using the plugin:
 -----------------
